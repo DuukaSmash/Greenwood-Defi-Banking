@@ -1,0 +1,54 @@
+pragma solidity ^0.7.5;
+
+import "./Ownable.sol";
+import "./Destroyable.sol";
+
+
+contract GreenwoodBank2 is Ownable, Destroyable {
+   
+    mapping(address => uint) balance;
+    
+    event depositDone(uint amount, address indexed depositedTo);
+    //events cannot be same name as function.
+        
+    function deposit() payable public returns (uint) {
+        balance[msg.sender] += msg.value;
+        
+        emit depositDone(msg.value, msg.sender);
+        //emit is named same as event.
+        return balance[msg.sender];
+    }
+    
+    function getBalance() public view returns (uint){
+        return balance[msg.sender];
+    }
+    
+    function withdraw(uint amount) public returns (uint){
+        //msg.sender is an address
+        require(balance[msg.sender] >= amount);
+        balance[msg.sender] -= amount;
+        msg.sender.transfer(amount);
+        return balance[msg.sender];
+
+    }
+    
+    function transfer(address recipient, uint amount) public { 
+        require(balance[msg.sender] >= amount, "Balance not sufficient");
+        require(msg.sender != recipient, "Don't transfer money to yourself");
+        
+        uint previousSenderBalance = balance[msg.sender];
+         _transfer(msg.sender, recipient, amount);
+        
+        assert(balance[msg.sender] == previousSenderBalance - amount);
+        //event Logs and further checks
+    }
+    
+    function _transfer(address from, address to, uint amount) private {
+        balance[from] -= amount;
+        balance[to] += amount;
+    }
+    
+    function getOwner() view public returns (address) {
+        return owner;
+    }
+}
